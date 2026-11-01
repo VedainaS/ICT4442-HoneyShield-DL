@@ -1,0 +1,11 @@
+test_models_forward_backward (test_pipeline.PipelineTests.test_models_forward_backward) ... ok
+test_saved_data_and_clean_windows (test_pipeline.PipelineTests.test_saved_data_and_clean_windows) ... ok
+test_user_disjoint (test_pipeline.PipelineTests.test_user_disjoint) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 6.788s
+
+OK
+
+PASS: independent 25-epoch training and per-attack analysis metrics match exactly for all 4 models.
+PASS: CNN checkpoint reload and inference completed on 9,655 sequences.

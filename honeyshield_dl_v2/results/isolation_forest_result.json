@@ -1,0 +1,9 @@
+{
+  "model": "isolation_forest (baseline)",
+  "precision": 0.058823529411764705,
+  "recall": 0.008,
+  "f1_score": 0.014084507042253521,
+  "pr_auc": 0.21400821497520536,
+  "n_test": 3010,
+  "n_test_anomalous": 250
+}

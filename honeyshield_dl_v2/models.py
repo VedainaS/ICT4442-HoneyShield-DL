@@ -2,8 +2,7 @@
 models.py
 ---------
 Four autoencoder architectures, ALL trained on the identical fixed-length
-per-user temporal sequence (shape: seq_len=10, num_features=11), so that
-architecture is the only variable being compared.
+per-user temporal sequence (shape: seq_len=10, num_features=11), with common data and optimization settings; capacities differ by architecture.
 
 1. MLPAutoencoder       - flattens the sequence into a single vector.
 2. CNNAutoencoder       - 1D convolutions over the sequence (temporal axis).

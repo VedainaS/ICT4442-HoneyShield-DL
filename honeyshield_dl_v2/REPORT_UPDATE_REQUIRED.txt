@@ -1,0 +1,9 @@
+The existing DOCX reports are now outdated. Replace all old experiment metrics and split descriptions with README.md and results/final_run_25ep.json. Do not submit old conclusions about LSTM/attention failure or zero recall without updating them. The corrected results use a different split, training filter, per-model seed reset and PyTorch version; differences cannot be attributed to leakage removal alone.
+
+| Model | Precision | Recall | F1 | Average precision |
+|---|---:|---:|---:|---:|
+| mlp | 0.1923 | 0.6000 | 0.2913 | 0.1890 |
+| cnn | 0.1861 | 0.7520 | 0.2984 | 0.1815 |
+| lstm | 0.1863 | 0.6720 | 0.2917 | 0.1754 |
+| attention | 0.1868 | 0.7000 | 0.2949 | 0.1867 |
+| isolation_forest (baseline) | 0.0588 | 0.0080 | 0.0141 | 0.2140 |

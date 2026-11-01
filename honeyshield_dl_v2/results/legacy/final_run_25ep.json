@@ -1,0 +1,114 @@
+[
+  {
+    "model": "mlp",
+    "threshold": 0.07087277621030807,
+    "precision": 0.8034188034188035,
+    "recall": 0.39166666666666666,
+    "f1_score": 0.5266106442577031,
+    "pr_auc": 0.5002336239147525,
+    "n_test": 3000,
+    "n_test_anomalous": 240,
+    "epochs": 25,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 1.0,
+      "Impossible Travel": 0.018867924528301886,
+      "Device Spoofing": 0.0,
+      "Privilege Escalation": 0.14285714285714285
+    },
+    "n_by_attack": {
+      "Brute Force": 39,
+      "Credential Stuffing": 47,
+      "Impossible Travel": 53,
+      "Device Spoofing": 52,
+      "Privilege Escalation": 49
+    },
+    "false_positive_rate": 0.008333333333333333,
+    "true_positives": 94,
+    "false_positives": 23
+  },
+  {
+    "model": "cnn",
+    "threshold": 0.0008202237077057362,
+    "precision": 0.8047337278106509,
+    "recall": 0.5666666666666667,
+    "f1_score": 0.6650366748166259,
+    "pr_auc": 0.6463811312932949,
+    "n_test": 3000,
+    "n_test_anomalous": 240,
+    "epochs": 25,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 1.0,
+      "Impossible Travel": 0.0,
+      "Device Spoofing": 0.019230769230769232,
+      "Privilege Escalation": 1.0
+    },
+    "n_by_attack": {
+      "Brute Force": 39,
+      "Credential Stuffing": 47,
+      "Impossible Travel": 53,
+      "Device Spoofing": 52,
+      "Privilege Escalation": 49
+    },
+    "false_positive_rate": 0.011956521739130435,
+    "true_positives": 136,
+    "false_positives": 33
+  },
+  {
+    "model": "lstm",
+    "threshold": 0.4860905110836029,
+    "precision": 0.6705882352941176,
+    "recall": 0.2375,
+    "f1_score": 0.3507692307692308,
+    "pr_auc": 0.3911981242947371,
+    "n_test": 3000,
+    "n_test_anomalous": 240,
+    "epochs": 25,
+    "recall_by_attack": {
+      "Brute Force": 0.8461538461538461,
+      "Credential Stuffing": 0.44680851063829785,
+      "Impossible Travel": 0.03773584905660377,
+      "Device Spoofing": 0.0,
+      "Privilege Escalation": 0.02040816326530612
+    },
+    "n_by_attack": {
+      "Brute Force": 39,
+      "Credential Stuffing": 47,
+      "Impossible Travel": 53,
+      "Device Spoofing": 52,
+      "Privilege Escalation": 49
+    },
+    "false_positive_rate": 0.010144927536231883,
+    "true_positives": 57,
+    "false_positives": 28
+  },
+  {
+    "model": "attention",
+    "threshold": 1.7043849229812622,
+    "precision": 0.26666666666666666,
+    "recall": 0.05,
+    "f1_score": 0.08421052631578947,
+    "pr_auc": 0.18111771046200376,
+    "n_test": 3000,
+    "n_test_anomalous": 240,
+    "epochs": 25,
+    "recall_by_attack": {
+      "Brute Force": 0.1282051282051282,
+      "Credential Stuffing": 0.06382978723404255,
+      "Impossible Travel": 0.0,
+      "Device Spoofing": 0.057692307692307696,
+      "Privilege Escalation": 0.02040816326530612
+    },
+    "n_by_attack": {
+      "Brute Force": 39,
+      "Credential Stuffing": 47,
+      "Impossible Travel": 53,
+      "Device Spoofing": 52,
+      "Privilege Escalation": 49
+    },
+    "false_positive_rate": 0.011956521739130435,
+    "true_positives": 12,
+    "false_positives": 33
+  }
+]

@@ -1,0 +1,230 @@
+
+=== Training MLP Autoencoder ===
+  epoch 1/25  train_MSE=0.08057
+  epoch 2/25  train_MSE=0.03473
+  epoch 3/25  train_MSE=0.01843
+  epoch 4/25  train_MSE=0.01298
+  epoch 5/25  train_MSE=0.01077
+  epoch 6/25  train_MSE=0.00832
+  epoch 7/25  train_MSE=0.00634
+  epoch 8/25  train_MSE=0.00450
+  epoch 9/25  train_MSE=0.00424
+  epoch 10/25  train_MSE=0.00409
+  epoch 11/25  train_MSE=0.00398
+  epoch 12/25  train_MSE=0.00395
+  epoch 13/25  train_MSE=0.00384
+  epoch 14/25  train_MSE=0.00379
+  epoch 15/25  train_MSE=0.00373
+  epoch 16/25  train_MSE=0.00365
+  epoch 17/25  train_MSE=0.00358
+  epoch 18/25  train_MSE=0.00353
+  epoch 19/25  train_MSE=0.00348
+  epoch 20/25  train_MSE=0.00341
+  epoch 21/25  train_MSE=0.00338
+  epoch 22/25  train_MSE=0.00331
+  epoch 23/25  train_MSE=0.00326
+  epoch 24/25  train_MSE=0.00323
+  epoch 25/25  train_MSE=0.00318
+  -> Precision=0.1923  Recall=0.6000  F1=0.2913  PR-AUC=0.1890
+
+=== Training CNN Autoencoder ===
+  epoch 1/25  train_MSE=0.05850
+  epoch 2/25  train_MSE=0.00683
+  epoch 3/25  train_MSE=0.00212
+  epoch 4/25  train_MSE=0.00092
+  epoch 5/25  train_MSE=0.00052
+  epoch 6/25  train_MSE=0.00039
+  epoch 7/25  train_MSE=0.00030
+  epoch 8/25  train_MSE=0.00024
+  epoch 9/25  train_MSE=0.00021
+  epoch 10/25  train_MSE=0.00019
+  epoch 11/25  train_MSE=0.00018
+  epoch 12/25  train_MSE=0.00015
+  epoch 13/25  train_MSE=0.00014
+  epoch 14/25  train_MSE=0.00016
+  epoch 15/25  train_MSE=0.00011
+  epoch 16/25  train_MSE=0.00010
+  epoch 17/25  train_MSE=0.00010
+  epoch 18/25  train_MSE=0.00009
+  epoch 19/25  train_MSE=0.00009
+  epoch 20/25  train_MSE=0.00010
+  epoch 21/25  train_MSE=0.00008
+  epoch 22/25  train_MSE=0.00008
+  epoch 23/25  train_MSE=0.00009
+  epoch 24/25  train_MSE=0.00007
+  epoch 25/25  train_MSE=0.00008
+  -> Precision=0.1861  Recall=0.7520  F1=0.2984  PR-AUC=0.1815
+
+=== Training LSTM Autoencoder ===
+  epoch 1/25  train_MSE=0.08538
+  epoch 2/25  train_MSE=0.06495
+  epoch 3/25  train_MSE=0.05703
+  epoch 4/25  train_MSE=0.05439
+  epoch 5/25  train_MSE=0.05305
+  epoch 6/25  train_MSE=0.05189
+  epoch 7/25  train_MSE=0.05092
+  epoch 8/25  train_MSE=0.04983
+  epoch 9/25  train_MSE=0.04849
+  epoch 10/25  train_MSE=0.04759
+  epoch 11/25  train_MSE=0.04678
+  epoch 12/25  train_MSE=0.04603
+  epoch 13/25  train_MSE=0.04489
+  epoch 14/25  train_MSE=0.04386
+  epoch 15/25  train_MSE=0.04302
+  epoch 16/25  train_MSE=0.04258
+  epoch 17/25  train_MSE=0.04208
+  epoch 18/25  train_MSE=0.04149
+  epoch 19/25  train_MSE=0.04103
+  epoch 20/25  train_MSE=0.04074
+  epoch 21/25  train_MSE=0.04042
+  epoch 22/25  train_MSE=0.03959
+  epoch 23/25  train_MSE=0.03891
+  epoch 24/25  train_MSE=0.03796
+  epoch 25/25  train_MSE=0.03689
+  -> Precision=0.1863  Recall=0.6720  F1=0.2917  PR-AUC=0.1754
+
+=== Training ATTENTION Autoencoder ===
+  epoch 1/25  train_MSE=0.08956
+  epoch 2/25  train_MSE=0.06762
+  epoch 3/25  train_MSE=0.06720
+  epoch 4/25  train_MSE=0.06690
+  epoch 5/25  train_MSE=0.06678
+  epoch 6/25  train_MSE=0.06674
+  epoch 7/25  train_MSE=0.06673
+  epoch 8/25  train_MSE=0.06672
+  epoch 9/25  train_MSE=0.06671
+  epoch 10/25  train_MSE=0.06671
+  epoch 11/25  train_MSE=0.06671
+  epoch 12/25  train_MSE=0.06670
+  epoch 13/25  train_MSE=0.06670
+  epoch 14/25  train_MSE=0.06670
+  epoch 15/25  train_MSE=0.06670
+  epoch 16/25  train_MSE=0.06670
+  epoch 17/25  train_MSE=0.06669
+  epoch 18/25  train_MSE=0.06670
+  epoch 19/25  train_MSE=0.06670
+  epoch 20/25  train_MSE=0.06669
+  epoch 21/25  train_MSE=0.06669
+  epoch 22/25  train_MSE=0.06669
+  epoch 23/25  train_MSE=0.06669
+  epoch 24/25  train_MSE=0.06669
+  epoch 25/25  train_MSE=0.06669
+  -> Precision=0.1868  Recall=0.7000  F1=0.2949  PR-AUC=0.1867
+[
+  {
+    "model": "mlp",
+    "threshold": 0.0274126585572958,
+    "precision": 0.19230769230769232,
+    "recall": 0.6,
+    "f1_score": 0.2912621359223301,
+    "pr_auc": 0.18899128170102011,
+    "n_test": 3010,
+    "n_test_anomalous": 250,
+    "epochs": 25,
+    "seed": 42,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 1.0,
+      "Impossible Travel": 0.24528301886792453,
+      "Device Spoofing": 0.3023255813953488,
+      "Privilege Escalation": 0.5238095238095238
+    },
+    "n_by_attack": {
+      "Brute Force": 46,
+      "Credential Stuffing": 45,
+      "Impossible Travel": 53,
+      "Device Spoofing": 43,
+      "Privilege Escalation": 63
+    },
+    "false_positive_rate": 0.22826086956521738,
+    "true_positives": 150,
+    "false_positives": 630
+  },
+  {
+    "model": "cnn",
+    "threshold": 0.0002497317036613822,
+    "precision": 0.18613861386138614,
+    "recall": 0.752,
+    "f1_score": 0.2984126984126984,
+    "pr_auc": 0.18145059766552574,
+    "n_test": 3010,
+    "n_test_anomalous": 250,
+    "epochs": 25,
+    "seed": 42,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 1.0,
+      "Impossible Travel": 0.3018867924528302,
+      "Device Spoofing": 0.4186046511627907,
+      "Privilege Escalation": 1.0
+    },
+    "n_by_attack": {
+      "Brute Force": 46,
+      "Credential Stuffing": 45,
+      "Impossible Travel": 53,
+      "Device Spoofing": 43,
+      "Privilege Escalation": 63
+    },
+    "false_positive_rate": 0.29782608695652174,
+    "true_positives": 188,
+    "false_positives": 822
+  },
+  {
+    "model": "lstm",
+    "threshold": 0.14582504332065582,
+    "precision": 0.18625277161862527,
+    "recall": 0.672,
+    "f1_score": 0.2916666666666667,
+    "pr_auc": 0.17539195785155207,
+    "n_test": 3010,
+    "n_test_anomalous": 250,
+    "epochs": 25,
+    "seed": 42,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 0.9333333333333333,
+      "Impossible Travel": 0.3018867924528302,
+      "Device Spoofing": 0.32558139534883723,
+      "Privilege Escalation": 0.7936507936507936
+    },
+    "n_by_attack": {
+      "Brute Force": 46,
+      "Credential Stuffing": 45,
+      "Impossible Travel": 53,
+      "Device Spoofing": 43,
+      "Privilege Escalation": 63
+    },
+    "false_positive_rate": 0.26594202898550723,
+    "true_positives": 168,
+    "false_positives": 734
+  },
+  {
+    "model": "attention",
+    "threshold": 0.17896974086761475,
+    "precision": 0.18676627534685167,
+    "recall": 0.7,
+    "f1_score": 0.2948609941027801,
+    "pr_auc": 0.18665021622498595,
+    "n_test": 3010,
+    "n_test_anomalous": 250,
+    "epochs": 25,
+    "seed": 42,
+    "recall_by_attack": {
+      "Brute Force": 1.0,
+      "Credential Stuffing": 0.9333333333333333,
+      "Impossible Travel": 0.3018867924528302,
+      "Device Spoofing": 0.32558139534883723,
+      "Privilege Escalation": 0.9047619047619048
+    },
+    "n_by_attack": {
+      "Brute Force": 46,
+      "Credential Stuffing": 45,
+      "Impossible Travel": 53,
+      "Device Spoofing": 43,
+      "Privilege Escalation": 63
+    },
+    "false_positive_rate": 0.27608695652173915,
+    "true_positives": 175,
+    "false_positives": 762
+  }
+]

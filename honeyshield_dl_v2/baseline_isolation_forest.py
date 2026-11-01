@@ -24,12 +24,13 @@ def run_isolation_forest():
     X_train_last = X_train[:, -1, :]
     X_test_last = X_test[:, -1, :]
 
-    clf = IsolationForest(contamination=0.08, random_state=SEED)
+    clf = IsolationForest(contamination="auto", random_state=SEED)
     clf.fit(X_train_last)
 
     # score_samples: higher = more normal, so we negate for an anomaly score
     anomaly_scores = -clf.score_samples(X_test_last)
-    y_pred = (clf.predict(X_test_last) == -1).astype(int)
+    threshold = float(np.percentile(-clf.score_samples(X_val[:, -1, :]), 99))
+    y_pred = (anomaly_scores > threshold).astype(int)
 
     precision = precision_score(y_test, y_pred, zero_division=0)
     recall = recall_score(y_test, y_pred, zero_division=0)

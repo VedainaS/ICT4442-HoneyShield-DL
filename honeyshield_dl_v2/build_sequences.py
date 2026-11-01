@@ -1,26 +1,6 @@
+"""User-disjoint splits; training-only preprocessing; fully normal train/val windows.
+Test labels describe the last event in each window. Unknown categories map to zero.
 """
-build_sequences.py
--------------------
-Preprocesses raw_logs.csv and restructures it into fixed-length, per-user
-temporal sequences — the SAME input representation used by all four models
-(MLP, CNN, LSTM, Attention), so that architecture is the only variable being
-compared (fair-comparison requirement).
-
-Steps:
-1. Clean + encode categorical/behavioural features per event.
-2. Group events by user, order by timestamp.
-3. Slide a fixed-length window (N=10 events) per user to build sequences.
-   Users with fewer than N events are zero-padded at the start.
-4. Save:
-   - data/sequences_X.npy        shape (num_sequences, N, num_features)
-   - data/sequences_y.npy        shape (num_sequences,)  1 if ANY event in
-                                   the window is a true anomaly, else 0
-   - data/sequences_attack.npy   dominant attack type label per sequence (for analysis only)
-
-Ground-truth labels are NOT used for training (only for threshold selection
-and final evaluation, as per the unsupervised protocol).
-"""
-
 import numpy as np
 import pandas as pd
 import os
@@ -33,7 +13,10 @@ def frequency_encode(series):
     return series.map(freq).astype(float)
 
 
-def build_features(df):
+def build_features(df, fit_df=None):
+    if fit_df is None:
+        raise ValueError("Training events are required to fit preprocessing")
+    fit_df = fit_df.copy()
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["login_hour"] = df["timestamp"].dt.hour
@@ -49,14 +32,14 @@ def build_features(df):
 
     # Statistical deviation feature
     df["session_duration_zscore"] = (
-        (df["session_duration"] - df["session_duration"].mean())
-        / df["session_duration"].std()
+        (df["session_duration"] - fit_df["session_duration"].mean())
+        / max(float(fit_df["session_duration"].std()), 1e-8)
     )
 
-    # Frequency-encoded rarity features (fit on this dataset only;
-    # in a train/test split these should be fit on train only to avoid leakage)
+    # Frequency maps fitted exclusively on normal training-user events.
     for col in ["country", "resource_accessed", "browser", "device_type", "ip_address"]:
-        df[f"{col}_freq"] = frequency_encode(df[col])
+        freq = fit_df[col].value_counts(normalize=True)
+        df[f"{col}_freq"] = df[col].map(freq).fillna(0.0).astype(float)
 
     feature_cols = [
         "login_success_flag", "is_failed_login", "is_sensitive_resource",
@@ -107,16 +90,36 @@ def build_sequences(df, feature_cols, seq_len=SEQ_LEN):
     return X, y, attacks
 
 
-if __name__ == "__main__":
+def prepare_data():
+    import json
+    from sklearn.model_selection import train_test_split
     os.makedirs("data", exist_ok=True)
     df = pd.read_csv("data/raw_logs.csv")
-    df, feature_cols = build_features(df)
-    X, y, attacks = build_sequences(df, feature_cols, seq_len=SEQ_LEN)
+    users = sorted(df.user_id.unique())
+    trainval, test = train_test_split(users, test_size=0.2, random_state=42)
+    train, val = train_test_split(trainval, test_size=0.15, random_state=42)
+    fit = df[df.user_id.isin(train) & (df.is_anomaly_ground_truth == 0)]
+    arrays = []
+    manifest = {}
+    for name, ids in [("train", train), ("val", val), ("test", test)]:
+        subset, cols = build_features(df[df.user_id.isin(ids)], fit)
+        X, y, attacks = build_sequences(subset, cols)
+        clean = []
+        for _, group in subset.groupby("user_id"):
+            labels = group.sort_values("timestamp").is_anomaly_ground_truth.to_numpy()
+            clean.extend(not labels[max(0,i-9):i+1].any() for i in range(len(labels)))
+        clean = np.asarray(clean)
+        keep = clean if name != "test" else np.ones(len(y), dtype=bool)
+        arrays.append((X[keep], y[keep], attacks[keep], np.full(keep.sum(), name)))
+        manifest[name] = {"users": sorted(ids), "sequences": int(keep.sum()), "anomalies": int(y[keep].sum())}
+    X,y,a,split = [np.concatenate([row[i] for row in arrays]) for i in range(4)]
+    for name, arr in [("X",X),("y",y),("attack",a),("split",split)]:
+        np.save("data/sequences_"+name+".npy",arr)
+    preprocessing = {"duration_mean": float(fit.session_duration.mean()), "duration_std": float(fit.session_duration.std()),
+        "frequencies": {col: fit[col].value_counts(normalize=True).to_dict() for col in ["country","resource_accessed","browser","device_type","ip_address"]}, "features": cols}
+    with open("data/preprocessing.json","w") as f: json.dump(preprocessing,f,indent=2)
+    with open("data/split_manifest.json","w") as f: json.dump(manifest,f,indent=2)
+    print({k: {a:b for a,b in v.items() if a != "users"} for k,v in manifest.items()})
 
-    np.save("data/sequences_X.npy", X)
-    np.save("data/sequences_y.npy", y)
-    np.save("data/sequences_attack.npy", attacks)
-
-    print(f"Built {X.shape[0]} sequences of shape ({X.shape[1]}, {X.shape[2]})")
-    print(f"Anomalous sequences: {y.sum()} ({100*y.mean():.2f}%)")
-    print(f"Feature columns ({len(feature_cols)}): {feature_cols}")
+if __name__ == "__main__":
+    prepare_data()

@@ -1,5 +1,5 @@
-numpy
-pandas
-scikit-learn
-faker
-torch
+numpy==2.3.5
+pandas==2.2.3
+scikit-learn==1.8.0
+faker==40.44.0
+torch==2.15.0

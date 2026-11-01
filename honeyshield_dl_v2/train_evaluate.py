@@ -1,30 +1,4 @@
-"""
-train_evaluate.py
-------------------
-Implements the common unsupervised evaluation protocol for all four models:
-
-1. Split sequences into train / val / test.
-   - Train set: ONLY normal sequences (autoencoders never see anomalies).
-   - Val set:   ONLY normal sequences, held out from training, used purely
-                to select the anomaly-score threshold (no test-set leakage).
-   - Test set:  BOTH normal and anomalous sequences, used only for final
-                evaluation (never seen during training or thresholding).
-2. Train each autoencoder to minimise reconstruction error on the train set.
-3. Compute reconstruction error (MSE) on the val set -> set threshold at the
-   99th percentile of NORMAL validation error (approximating the known ~8%
-   anomaly rate without touching test labels).
-4. On the test set: predict anomaly if reconstruction_error > threshold.
-   Report Precision, Recall, F1-score, and PR-AUC (using the continuous
-   reconstruction-error score, not just the thresholded prediction).
-
-Usage:
-    python train_evaluate.py --model mlp
-    python train_evaluate.py --model cnn
-    python train_evaluate.py --model lstm
-    python train_evaluate.py --model attention
-    python train_evaluate.py --model all      # runs all four, saves comparison table
-"""
-
+"""CPU deterministic training; 99th-percentile normal validation threshold (~1% validation FPR)."""
 import argparse
 import numpy as np
 import torch
@@ -41,7 +15,9 @@ SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.set_num_threads(2)
+torch.use_deterministic_algorithms(True)
+DEVICE = torch.device("cpu")
 
 
 def load_data():
@@ -51,15 +27,8 @@ def load_data():
 
 
 def split_data(X, y, seed=SEED):
-    # First split off a labelled test set (stratified, keeps both classes)
-    X_trainval, X_test, y_trainval, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=seed
-    )
-    # From the remaining normal-only pool, carve train vs. val
-    normal_mask = y_trainval == 0
-    X_normal = X_trainval[normal_mask]
-    X_train, X_val = train_test_split(X_normal, test_size=0.15, random_state=seed)
-    return X_train, X_val, X_test, y_test
+    split = np.load("data/sequences_split.npy")
+    return X[split == "train"], X[split == "val"], X[split == "test"], y[split == "test"]
 
 
 def make_loader(X, batch_size=64, shuffle=True):
@@ -103,6 +72,8 @@ def reconstruction_errors(model, X):
 
 
 def run_one_model(model_name, X_train, X_val, X_test, y_test, epochs=15):
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
     print(f"\n=== Training {model_name.upper()} Autoencoder ===")
     seq_len, num_features = X_train.shape[1], X_train.shape[2]
     model_cls = MODEL_REGISTRY[model_name]
@@ -135,13 +106,19 @@ def run_one_model(model_name, X_train, X_val, X_test, y_test, epochs=15):
         "n_test_anomalous": int(y_test.sum()),
     }
     print(f"  -> Precision={precision:.4f}  Recall={recall:.4f}  F1={f1:.4f}  PR-AUC={pr_auc:.4f}")
+    os.makedirs("checkpoints", exist_ok=True)
+    torch.save({"state_dict": model.cpu().state_dict(), "threshold": threshold,
+                "seq_len": seq_len, "num_features": num_features, "seed": SEED,
+                "epochs": epochs, "model": model_name}, f"checkpoints/{model_name}.pt")
+    result["epochs"] = epochs
+    result["seed"] = SEED
     return result, model
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=list(MODEL_REGISTRY.keys()) + ["all"], default="all")
-    parser.add_argument("--epochs", type=int, default=15)
+    parser.add_argument("--epochs", type=int, default=25)
     args = parser.parse_args()
 
     X, y = load_data()
