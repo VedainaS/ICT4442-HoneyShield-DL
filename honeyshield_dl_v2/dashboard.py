@@ -41,6 +41,80 @@ def score(name,X):
             chunks.append(((model(batch)-batch)**2).mean(dim=(1,2)).numpy())
     return np.concatenate(chunks),threshold
 
+
+@st.cache_data
+def load_preprocessing():
+    return json.loads((ROOT/'data/preprocessing.json').read_text())
+
+def _to_bool(series):
+    if pd.api.types.is_bool_dtype(series):
+        return series.astype(int)
+    normalized = series.astype(str).str.strip().str.lower()
+    converted = normalized.map({'true': 1, 'false': 0, '1': 1, '0': 0, 'yes': 1, 'no': 0})
+    if converted.isna().any():
+        raise ValueError('login_success must contain true/false, 1/0, or yes/no values.')
+    return converted.astype(int)
+
+def prepare_uploaded_csv(uploaded_file):
+    """Convert a raw project-format CSV into 10-event model windows."""
+    required = ['timestamp','user_id','country','ip_address','device_id','device_type','os','browser','resource_accessed','login_success','failed_attempts','session_duration']
+    df = pd.read_csv(uploaded_file)
+    missing = [col for col in required if col not in df.columns]
+    if missing:
+        raise ValueError('Missing required columns: ' + ', '.join(missing))
+    if df.empty:
+        raise ValueError('The uploaded CSV has no rows.')
+    df = df.copy()
+    for col in required:
+        if df[col].isna().any():
+            raise ValueError(f"Column '{col}' contains empty values.")
+    try:
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='raise')
+        df['login_success_flag'] = _to_bool(df['login_success'])
+        df['failed_attempts'] = pd.to_numeric(df['failed_attempts'], errors='raise')
+        df['session_duration'] = pd.to_numeric(df['session_duration'], errors='raise')
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f'Invalid timestamp or numeric/boolean value: {exc}') from exc
+
+    if 'is_anomaly_ground_truth' in df.columns:
+        labels = pd.to_numeric(df['is_anomaly_ground_truth'], errors='coerce')
+        if labels.isna().any() or not labels.isin([0, 1]).all():
+            raise ValueError('Optional is_anomaly_ground_truth must contain only 0 or 1.')
+        df['is_anomaly_ground_truth'] = labels.astype(int)
+    prep = load_preprocessing()
+    df['login_hour'] = df['timestamp'].dt.hour
+    df['is_failed_login'] = (df['failed_attempts'] > 0).astype(int)
+    df['is_sensitive_resource'] = df['resource_accessed'].isin(['admin_panel','payroll_system','hr_database','finance_console']).astype(int)
+    df['unusual_login_hour'] = (~df['login_hour'].between(6,22)).astype(int)
+    df['session_duration_zscore'] = (df['session_duration'] - float(prep['duration_mean'])) / max(float(prep['duration_std']), 1e-8)
+    for col in ['country','resource_accessed','browser','device_type','ip_address']:
+        df[f'{col}_freq'] = df[col].map(prep['frequencies'][col]).fillna(0.0).astype(float)
+
+    feature_cols = prep['features']
+    windows, metadata = [], []
+    for _, group in df.groupby('user_id', sort=False):
+        group = group.sort_values('timestamp').reset_index(drop=True)
+        features = group[feature_cols].to_numpy(dtype=np.float32)
+        for end_idx in range(len(group)):
+            start_idx = max(0, end_idx - 9)
+            window = features[start_idx:end_idx + 1]
+            if len(window) < 10:
+                window = np.vstack([np.zeros((10-len(window), len(feature_cols)), dtype=np.float32), window])
+            windows.append(window)
+            row = group.iloc[end_idx]
+            metadata.append({
+                'user_id': row['user_id'], 'timestamp': row['timestamp'],
+                'country': row['country'], 'ip_address': row['ip_address'],
+                'device_id': row['device_id'], 'device_type': row['device_type'],
+                'resource_accessed': row['resource_accessed'],
+                'attack_type': row['attack_type'] if 'attack_type' in group.columns else 'Unknown',
+                'actual_anomaly': int(row['is_anomaly_ground_truth']) if 'is_anomaly_ground_truth' in group.columns else None
+            })
+    if not windows:
+        raise ValueError('No valid login events could be converted into sequences.')
+    return np.stack(windows), pd.DataFrame(metadata)
+
+
 def metrics(y,scores,threshold):
     p=(scores>threshold).astype(int)
     tn,fp,fn,tp=confusion_matrix(y,p,labels=[0,1]).ravel()
@@ -82,7 +156,7 @@ if run or run_all:
             st.error(f'Prediction failed: {exc}')
     if all(n in st.session_state.runs for n in names):st.success('Inference completed on the test set.')
 
-tab1,tab2,tab3,tab4=st.tabs(['Model comparison','Live predictions','Attack analysis','How to improve'])
+tab1,tab2,tab3,tab4,tab5=st.tabs(['Model comparison','Live predictions','Attack analysis','How to improve','Upload new CSV'])
 with tab1:
     st.subheader('Common test-set comparison')
     rows=[]
@@ -150,3 +224,55 @@ with tab4:
 4. **Improve representations.** Add new-device indicators, user-relative behavior and actual distance/time features; mask padding and consider a per-step attention decoder.
 5. **Evaluate honestly.** Select configurations on validation only, freeze them, then use a fresh untouched holdout. The current test set has already been inspected repeatedly. Report multiple seeds and false-positive costs.''')
     st.caption('These are proposed experiments, not measured improvements. Existing results and report numbers remain unchanged.')
+
+
+with tab5:
+    st.subheader('Run anomaly detection on a new synthetic login CSV')
+    st.write('Upload a CSV following the same raw login-event schema used to train HoneyShield. The saved preprocessing maps, model weights and validation thresholds are reused; no model retraining occurs.')
+    st.caption('Required columns: timestamp, user_id, country, ip_address, device_id, device_type, os, browser, resource_accessed, login_success, failed_attempts, session_duration. Optional: attack_type, is_anomaly_ground_truth.')
+    uploaded = st.file_uploader('Choose a login CSV', type=['csv'], key='honeyshield_csv_upload')
+    if uploaded is not None:
+        try:
+            preview = pd.read_csv(uploaded, nrows=5)
+            st.write('**CSV preview**')
+            st.dataframe(preview, width='stretch', hide_index=True)
+            uploaded.seek(0)
+            if st.button('Run anomaly detection on uploaded CSV', type='primary', key='run_uploaded_csv'):
+                with st.spinner('Applying training-time preprocessing and running checkpoint inference...'):
+                    uploaded.seek(0)
+                    upload_X, upload_meta = prepare_uploaded_csv(uploaded)
+                    upload_scores, upload_threshold = score(selected, upload_X)
+                    upload_predictions = (upload_scores > upload_threshold).astype(int)
+                    upload_result = upload_meta.copy()
+                    upload_result['anomaly_score'] = upload_scores
+                    upload_result['predicted_anomaly'] = upload_predictions
+                    upload_result['threshold'] = upload_threshold
+                    st.session_state['uploaded_result'] = upload_result
+                    st.session_state['uploaded_model'] = selected
+        except (OSError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+            st.error(f'Could not process this CSV: {exc}')
+    if 'uploaded_result' in st.session_state:
+        result = st.session_state['uploaded_result']
+        model_used = st.session_state.get('uploaded_model', selected)
+        st.divider()
+        st.subheader(f'{model_used.upper()} uploaded-file results')
+        flagged = result['predicted_anomaly'].eq(1)
+        c1, c2, c3 = st.columns(3)
+        c1.metric('Login events analysed', f'{len(result):,}')
+        c2.metric('Flagged events', f'{int(flagged.sum()):,}')
+        c3.metric('Flagged rate', f'{flagged.mean():.2%}')
+        st.warning('A flagged login is a model prediction for review, not proof of malicious activity.')
+        if result['actual_anomaly'].notna().all():
+            actual = result['actual_anomaly'].astype(int).to_numpy()
+            pred = result['predicted_anomaly'].astype(int).to_numpy()
+            st.write('**Ground-truth comparison**')
+            st.dataframe(pd.DataFrame([[int(((actual == 0) & (pred == 0)).sum()), int(((actual == 0) & (pred == 1)).sum())], [int(((actual == 1) & (pred == 0)).sum()), int(((actual == 1) & (pred == 1)).sum())]], index=['Actual normal', 'Actual attack'], columns=['Predicted normal', 'Predicted attack']), width='stretch')
+        filter_choice = st.selectbox('Rows to display', ['All events', 'Flagged events', 'Unflagged events'], key='uploaded_rows_filter')
+        if filter_choice == 'Flagged events':
+            display_result = result[flagged]
+        elif filter_choice == 'Unflagged events':
+            display_result = result[~flagged]
+        else:
+            display_result = result
+        st.dataframe(display_result, width='stretch', hide_index=True)
+        st.download_button('Download uploaded CSV predictions', result.to_csv(index=False), file_name='honeyshield_uploaded_predictions.csv', mime='text/csv', key='download_uploaded_predictions')
