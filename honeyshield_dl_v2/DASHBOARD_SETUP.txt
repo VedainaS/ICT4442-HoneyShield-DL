@@ -1,0 +1,26 @@
+HoneyShield-DL dashboard add-on
+
+Copy dashboard.py, test_dashboard.py and requirements-dashboard.txt beside models.py in the EXISTING honeyshield_dl_v2 project folder. This add-on uses existing data, checkpoints and results. Do not create a nested honeyshield_dl_v2 directory.
+
+Windows CMD (existing environment):
+call "%USERPROFILE%\honeyshield-venv\Scripts\activate.bat"
+cd /d "C:\Users\Vedaina Srivastava\ICT4442-HoneyShield-DL\honeyshield_dl_v2"
+python -m pip install -r requirements-dashboard.txt
+python -m streamlit run dashboard.py
+
+Open the Local URL printed by Streamlit (normally http://localhost:8501).
+Keep CMD open. Stop with Ctrl+C.
+
+Demo:
+1. Model comparison shows saved verified metrics with source labels.
+2. Click Run all four models for actual checkpoint inference on the 3,010 test windows.
+3. Select a model and open Live predictions: confusion matrix, score histogram, flagged rows and CSV export.
+4. Attack analysis shows category recall. Inspect false positives as well.
+5. How to improve explains validation-first experiments; it does not claim improved performance.
+
+The dashboard does not retrain models or overwrite result files. It does not upload logs anywhere. Predictions are on the supplied synthetic held-out data, not live enterprise traffic. No thresholds are adjusted using test labels. Restart the app after changing checkpoints or data to clear cached assets.
+
+Tests:
+python -m unittest -v test_dashboard
+
+AI assistance: ChatGPT assisted in developing this dashboard and its tests.

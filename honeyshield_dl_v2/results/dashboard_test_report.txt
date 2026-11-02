@@ -1,0 +1,7 @@
+test_inference_and_filters (test_dashboard.DashboardTests.test_inference_and_filters) ... 2026-11-02 11:23:13.607 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 5.651s
+
+OK
